@@ -63,7 +63,7 @@ function localSet(store: StoreName, records: RecordWithId[]): boolean {
 }
 
 /** Initialize IndexedDB, falling back to localStorage in file/WebView contexts. */
-export async function initDatabase(): Promise<void> {
+export async function initDatabase(seedUrl?: string): Promise<void> {
   try {
     await gharDb.open();
     storageMode = 'indexeddb';
@@ -83,6 +83,22 @@ export async function initDatabase(): Promise<void> {
   if (inventory.length) await bulkPut('inventory_items', inventory.map((item) => normalizeInventory(item, 'profile_default')));
   const cosmetics = await getAll<CosmeticItem>('cosmetics_items');
   if (cosmetics.length) await bulkPut('cosmetics_items', cosmetics.map((item) => normalizeCosmetic(item, 'profile_default')));
+
+  // The full 4,315-item JSON ships as a static asset so it does not inflate the JS bundle.
+  // It is fetched only once on a fresh/small database, then persisted in IndexedDB.
+  if (seedUrl && storageMode === 'indexeddb' && food.length < 4000) {
+    try {
+      const response = await fetch(seedUrl);
+      if (response.ok) {
+        const payload = await response.json() as { module?: string; items?: Partial<FoodItem>[] };
+        if (payload.module === 'food' && Array.isArray(payload.items) && payload.items.length > food.length) {
+          await bulkPut('food_items', payload.items.map((item) => normalizeFood(item)));
+        }
+      }
+    } catch {
+      // Offline first-load: keep the bundled starter set and allow Import to retry later.
+    }
+  }
 
   const locations = await getAll<LocationItem>('locations');
   if (!locations.length) await bulkPut('locations', DEFAULT_LOCATIONS);
