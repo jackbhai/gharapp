@@ -1,0 +1,25 @@
+import type { ReactNode } from 'react';
+import { CalendarDays, ChevronRight, CircleAlert, PackagePlus, ScanLine, ShoppingCart, Sparkles, Utensils, WalletCards } from 'lucide-react';
+import type { CosmeticItem, FoodItem, InventoryItem, Profile, AppSettings } from '../lib/types';
+import { getExpiryStatus } from '../lib/date';
+import { Button, Card, Chip } from '../components/ui';
+
+export function Dashboard({ foods, inventory, cosmetics, profileName, settings, onNavigate, onProfile, onOnboarding }: { foods: FoodItem[]; inventory: InventoryItem[]; cosmetics: CosmeticItem[]; profileName: string; settings: AppSettings; onNavigate: (tab: 'food' | 'inventory' | 'cosmetics' | 'planner' | 'more', view?: 'list' | 'form' | 'shopping' | 'tracker') => void; onProfile: () => void; onOnboarding: () => void }) {
+  const expiring = [...inventory, ...cosmetics].filter((item) => ['near', 'expired'].includes(getExpiryStatus(item.expiryDate, item.alertBeforeDays))).length;
+  const expired = [...inventory, ...cosmetics].filter((item) => getExpiryStatus(item.expiryDate, item.alertBeforeDays) === 'expired').length;
+  const lowStock = inventory.filter((item) => item.reorderLevel && item.quantity <= item.reorderLevel).length;
+  const date = new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' });
+  return <div className="dashboard page-container">
+    <div className="welcome-strip"><div><span className="eyebrow">{date.toUpperCase()}</span><h2>Namaste, {profileName.split(' ')[0]} <span>👋</span></h2><p>Your home, in one calm command center.</p></div><button type="button" className="round-avatar" onClick={onProfile} aria-label="Open profile">{profileName.slice(0, 1).toUpperCase()}</button></div>
+    <section className="dashboard-hero"><div className="hero-glow" /><div className="hero-copy"><span className="hero-kicker"><Sparkles size={14} /> SMART HOUSEHOLD</span><h1>Small routines.<br /><em>Big peace of mind.</em></h1><p>Keep food, stock, beauty and daily nutrition beautifully in sync.</p><div className="hero-actions"><Button onClick={() => onNavigate('inventory','form')}><PackagePlus size={16} /> Add to home</Button><Button variant="glass" onClick={() => onNavigate('planner')}><CalendarDays size={16} /> Plan a meal</Button></div></div><div className="hero-orbit"><span>🏠</span><i>✦</i><b>⌁</b></div></section>
+    {expiring > 0 && <button type="button" className="alert-card" onClick={() => onNavigate('inventory')}><span className="alert-icon"><CircleAlert size={19} /></span><span><strong>{expired ? `${expired} expired` : `${expiring} items`} {expired ? `· ${expiring - expired} near expiry` : ''}</strong><small>Open Inventory to review your expiry list</small></span><ChevronRight size={18} /></button>}
+    <div className="section-heading"><div><span className="eyebrow">OVERVIEW</span><h2>At a glance</h2></div><button type="button" className="text-button" onClick={onOnboarding}>Tour the app <ChevronRight size={14} /></button></div>
+    <div className="stat-grid"><StatCard icon={<Utensils size={18} />} value={foods.length} label="Food library" tone="mint" onClick={() => onNavigate('food')} /><StatCard icon={<PackagePlus size={18} />} value={inventory.length} label="Home stock" tone="blue" onClick={() => onNavigate('inventory')} /><StatCard icon={<Sparkles size={18} />} value={cosmetics.length} label="Beauty shelf" tone="purple" onClick={() => onNavigate('cosmetics')} /></div>
+    <div className="section-heading"><div><span className="eyebrow">SHORTCUTS</span><h2>Make it easy</h2></div></div>
+    <div className="shortcut-grid"><Shortcut icon={<ShoppingCart />} title="Shopping list" detail={lowStock ? `${lowStock} low-stock items` : 'Build your list'} onClick={() => onNavigate('more','shopping')} tone="orange" /><Shortcut icon={<WalletCards />} title="Nutrition log" detail="Track today’s intake" onClick={() => onNavigate('more','tracker')} tone="blue" /><Shortcut icon={<ScanLine />} title="Scan a barcode" detail="Fill stock in seconds" onClick={() => onNavigate('inventory','form')} tone="mint" /><Shortcut icon={<CalendarDays />} title="Weekly plan" detail="Meals, sorted" onClick={() => onNavigate('planner')} tone="purple" /></div>
+    <Card className="privacy-note"><span>🔒</span><div><strong>Private by design</strong><p>Your household data stays on this device. AI and barcode lookups are optional.</p></div></Card>
+  </div>;
+}
+
+function StatCard({ icon, value, label, tone, onClick }: { icon: ReactNode; value: number; label: string; tone: string; onClick: () => void }) { return <button type="button" className={`stat-card stat-${tone}`} onClick={onClick}><span className="stat-icon">{icon}</span><strong>{value}</strong><small>{label}</small><ChevronRight size={14} /></button>; }
+function Shortcut({ icon, title, detail, onClick, tone }: { icon: ReactNode; title: string; detail: string; onClick: () => void; tone: string }) { return <button type="button" className={`shortcut-card shortcut-${tone}`} onClick={onClick}><span className="shortcut-icon">{icon}</span><span><strong>{title}</strong><small>{detail}</small></span><ChevronRight size={15} /></button>; }
