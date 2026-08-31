@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { FilterState, ModuleName } from '../lib/types';
+import type { FilterState, FoodMode, ModuleName } from '../lib/types';
 import { todayISO } from '../lib/date';
 
 export type TabKey = 'home' | 'food' | 'inventory' | 'cosmetics' | 'planner' | 'chat' | 'more';
@@ -13,6 +13,8 @@ interface AppState {
   profileName: string;
   search: ModuleRecord<string>;
   filters: ModuleRecord<FilterState>;
+  foodMode: FoodMode;
+  foodFiltersByMode: Record<FoodMode, FilterState>;
   sort: ModuleRecord<string>;
   limits: ModuleRecord<number>;
   planDate: string;
@@ -24,6 +26,9 @@ interface AppState {
   setSearch: (module: ModuleName, value: string) => void;
   setFilters: (module: ModuleName, filters: FilterState) => void;
   patchFilters: (module: ModuleName, filters: FilterState) => void;
+  setFoodMode: (mode: FoodMode) => void;
+  setFoodFilters: (mode: FoodMode, filters: FilterState) => void;
+  patchFoodFilters: (mode: FoodMode, filters: FilterState) => void;
   setSort: (module: ModuleName, sort: string) => void;
   resetLimit: (module: ModuleName) => void;
   loadMore: (module: ModuleName) => void;
@@ -42,6 +47,8 @@ export const useAppStore = create<AppState>()(persist((set) => ({
   profileName: 'Mera ghar',
   search: initialModules(''),
   filters: initialModules({}),
+  foodMode: 'raw',
+  foodFiltersByMode: { raw: {}, cooked: {} },
   sort: { food: 'nameAsc', inventory: 'expiryAsc', cosmetics: 'nameAsc' },
   limits: initialModules(60),
   planDate: todayISO(),
@@ -53,6 +60,9 @@ export const useAppStore = create<AppState>()(persist((set) => ({
   setSearch: (module, value) => set((state) => ({ search: { ...state.search, [module]: value }, limits: { ...state.limits, [module]: 60 } })),
   setFilters: (module, filters) => set((state) => ({ filters: { ...state.filters, [module]: filters }, limits: { ...state.limits, [module]: 60 } })),
   patchFilters: (module, filters) => set((state) => ({ filters: { ...state.filters, [module]: { ...state.filters[module], ...filters } }, limits: { ...state.limits, [module]: 60 } })),
+  setFoodMode: (foodMode) => set({ foodMode }),
+  setFoodFilters: (foodMode, filters) => set((state) => ({ foodFiltersByMode: { ...state.foodFiltersByMode, [foodMode]: filters }, limits: { ...state.limits, food: 60 } })),
+  patchFoodFilters: (foodMode, filters) => set((state) => ({ foodFiltersByMode: { ...state.foodFiltersByMode, [foodMode]: { ...state.foodFiltersByMode[foodMode], ...filters } }, limits: { ...state.limits, food: 60 } })),
   setSort: (module, sort) => set((state) => ({ sort: { ...state.sort, [module]: sort }, limits: { ...state.limits, [module]: 60 } })),
   resetLimit: (module) => set((state) => ({ limits: { ...state.limits, [module]: 60 } })),
   loadMore: (module) => set((state) => ({ limits: { ...state.limits, [module]: state.limits[module] + 60 } })),
@@ -68,6 +78,8 @@ export const useAppStore = create<AppState>()(persist((set) => ({
     profileName: state.profileName,
     search: state.search,
     filters: state.filters,
+    foodMode: state.foodMode,
+    foodFiltersByMode: state.foodFiltersByMode,
     sort: state.sort,
     planDate: state.planDate,
     trackerDate: state.trackerDate,

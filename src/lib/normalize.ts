@@ -15,11 +15,19 @@ export function text(value: unknown): string {
   return String(value ?? '').trim();
 }
 
+/** Infer the two user-facing food sessions for old records that predate foodType. */
+function inferFoodType(item: Partial<FoodItem>): 'raw' | 'cooked' {
+  if (item.foodType === 'cooked' || item.foodType === 'raw') return item.foodType;
+  const haystack = `${item.name || ''} ${item.category || ''} ${item.subCategory || ''}`.toLowerCase();
+  return /(prepared|cooked meal|sweets?|mithai|bread|roti|naan|paratha|puri|bhatura|snack|street food|noodles|pasta|biryani|rice main|curry|dessert|bakery|pizza|kebab|shawarma|soup|dish)/.test(haystack) ? 'cooked' : 'raw';
+}
+
 /** Normalize food records from both the old HTML schema and the new app schema. */
 export function normalizeFood(item: Partial<FoodItem> = {}): FoodItem {
   const out: FoodItem = {
     ...item,
-    id: text(item.id) || `food_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+    id: text(item.id) || `food_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`, 
+    foodType: inferFoodType(item),
     name: text(item.name) || 'Unnamed food',
     category: text(item.category) || 'Other',
     subCategory: text(item.subCategory),
@@ -44,6 +52,10 @@ export function normalizeFood(item: Partial<FoodItem> = {}): FoodItem {
     out[field] = round2(item[field]);
   }
   out.glycemicIndex = item.glycemicIndex == null ? null : round2(item.glycemicIndex);
+  const dietaryHaystack = `${out.name} ${out.category} ${out.subCategory}`.toLowerCase();
+  if (item.isVeg === undefined) out.isVeg = !/(chicken|mutton|lamb|fish|prawn|seafood|egg|meat|beef|pork)/.test(dietaryHaystack);
+  if (item.isVegan === undefined) out.isVegan = Boolean(out.isVeg) && !/(paneer|milk|curd|butter|ghee|cream|cheese|yogurt|dairy|egg)/.test(dietaryHaystack);
+  if (item.isGlutenFree === undefined) out.isGlutenFree = !/(wheat|maida|bread|roti|naan|pasta|noodle|pide|phyllo)/.test(dietaryHaystack);
   const micronutrients = item.micronutrients ?? {};
   out.micronutrients = Object.fromEntries(
     ['iron_mg', 'calcium_mg', 'vitamin_c_mg', 'vitamin_a_mcg', 'vitamin_b12_mcg', 'potassium_mg', 'sodium_mg'].map((key) => [key, round2(micronutrients[key], 0)]),

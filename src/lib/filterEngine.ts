@@ -19,6 +19,8 @@ const between = (value: unknown, min?: number, max?: number): boolean => {
 };
 
 function matchesFood(item: FoodItem, query: string, filters: FilterState): boolean {
+  const wantedType = filters.foodType;
+  if (Array.isArray(wantedType) && wantedType.length && !wantedType.map(String).includes(String(item.foodType || 'raw'))) return false;
   const haystack = [item.name, item.category, item.subCategory, ...(item.tags ?? []), ...(item.pros ?? []), ...(item.cons ?? [])].join(' ').toLowerCase();
   if (query && !haystack.includes(query)) return false;
   if (!includesAny(String(item.category || ''), arrayValue(filters, 'categories'))) return false;
@@ -32,6 +34,7 @@ function matchesFood(item: FoodItem, query: string, filters: FilterState): boole
   if (times.length && !times.some((time) => String(item.bestTimeToEat || '').toLowerCase().includes(time))) return false;
   if (mealTypes.length && !includesAnyArray(item.mealTypes ?? [], mealTypes)) return false;
   if (!includesAnyArray(item.goodForHealthGoals ?? [], arrayValue(filters, 'healthGoals'))) return false;
+  if (!includesAnyArray(item.preparationMethods ?? [], arrayValue(filters, 'preparationMethods'))) return false;
   for (const [field, key] of [['caloriesPer100g', 'Calories'], ['proteinPer100g', 'Protein'], ['carbsPer100g', 'Carbs'], ['fatPer100g', 'Fat'], ['fiberPer100g', 'Fiber'], ['sugarPer100g', 'Sugar']] as const) {
     if (!between(item[field], numberValue(filters, `min${key}`), numberValue(filters, `max${key}`))) return false;
   }

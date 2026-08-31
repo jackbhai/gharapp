@@ -1,8 +1,10 @@
 export type ModuleName = 'food' | 'inventory' | 'cosmetics';
+export type FoodMode = 'raw' | 'cooked';
 
 export interface FoodItem {
   id: string;
   name: string;
+  foodType?: FoodMode;
   category: string;
   subCategory?: string;
   tasteTags?: string[];
@@ -31,6 +33,9 @@ export interface FoodItem {
   gymFriendly?: number | boolean;
   dailyUse?: number | boolean;
   recipeSearchQuery?: string;
+  recipeTitle?: string;
+  recipeIngredients?: string[];
+  recipeSteps?: string[];
   tags?: string[];
   cuisineStyle?: string;
   regions?: string[];
@@ -164,6 +169,7 @@ export interface DailyLog {
 export interface SavedFilter {
   id: string;
   module: ModuleName;
+  foodMode?: FoodMode;
   name: string;
   filters: FilterState;
   createdAt: string;

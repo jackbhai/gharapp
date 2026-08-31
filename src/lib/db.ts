@@ -1,5 +1,6 @@
 import Dexie, { type Table } from 'dexie';
 import { FOOD_DATA } from '../data/foodData';
+import { COOKED_MEALS } from '../data/cookedMeals';
 import type { AppSettings, CosmeticItem, DailyLog, FoodItem, InventoryItem, LocationItem, MealPlanItem, Profile, SavedFilter, ShoppingItem } from './types';
 import { normalizeCosmetic, normalizeFood, normalizeInventory } from './normalize';
 
@@ -73,7 +74,7 @@ export async function initDatabase(seedUrl?: string): Promise<void> {
 
   const food = await getAll<FoodItem>('food_items');
   if (!food.length) {
-    await bulkPut('food_items', FOOD_DATA.map((item) => normalizeFood(item)));
+    await bulkPut('food_items', [...FOOD_DATA, ...COOKED_MEALS].map((item) => normalizeFood(item)));
   } else {
     // v2/v7 records are rewritten once so long decimals such as 15.180000000000001 become 15.18.
     await bulkPut('food_items', food.map((item) => normalizeFood(item)));
@@ -99,7 +100,7 @@ export async function seedLargeFoodDataset(seedUrl: string): Promise<boolean> {
   try {
     const current = await getAll<FoodItem>('food_items');
     const marker = await getSetting<{ value?: number }>('foodDatasetVersion');
-    if (marker?.value === 2 && current.length >= 4500) return false;
+    if (marker?.value === 3 && current.length >= 4600) return false;
     const response = await fetch(seedUrl);
     if (!response.ok) return false;
     const payload = await response.json() as { module?: string; items?: Partial<FoodItem>[] };
