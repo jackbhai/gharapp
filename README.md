@@ -42,7 +42,7 @@ npm run preview
 
 ## Data & privacy
 
-The app stores records locally in IndexedDB. It falls back to localStorage if IndexedDB is unavailable in a file/WebView context. The supplied `public/data/indian_food_dataset.json` contains **4,663 pre-seeded food and dish records**. It covers vegetables/sabzi, breads, Indian sweets/mithai, snacks, rice and mains plus India-available Indo-Chinese, Chinese, Turkish, Italian, Lebanese, Thai, Korean and Continental dishes. It is loaded once and then stored in IndexedDB so the large catalog does not become part of the JavaScript bundle. AI and barcode lookup only call the network after the user chooses to configure/use them.
+The app stores records locally in IndexedDB. It falls back to localStorage if IndexedDB is unavailable in a file/WebView context. The supplied `public/data/indian_food_dataset.json` contains **4,683 pre-seeded food and dish records**. It covers vegetables/sabzi, breads, Indian sweets/mithai, snacks, rice and mains plus India-available Indo-Chinese, Chinese, Turkish, Italian, Lebanese, Thai, Korean and Continental dishes. The Food screen separates **Raw ingredients** from **Cooked meals**; the latter has recipe ingredients, method steps and nutrition for meals such as Chole Bhature, Rajma Chawal, Dal Roti, Dal Makhani and Shahi Paneer. It is loaded once and then stored in IndexedDB so the large catalog does not become part of the JavaScript bundle. AI and barcode lookup only call the network after the user chooses to configure/use them.
 
 The database migration normalizes legacy nutrition fields to two decimals, including values such as `15.180000000000001 → 15.18`.
 
