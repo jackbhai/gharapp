@@ -84,27 +84,30 @@ export async function initDatabase(seedUrl?: string): Promise<void> {
   const cosmetics = await getAll<CosmeticItem>('cosmetics_items');
   if (cosmetics.length) await bulkPut('cosmetics_items', cosmetics.map((item) => normalizeCosmetic(item, 'profile_default')));
 
-  // The full 4,315-item JSON ships as a static asset so it does not inflate the JS bundle.
-  // It is fetched only once on a fresh/small database, then persisted in IndexedDB.
-  if (seedUrl && storageMode === 'indexeddb' && food.length < 4000) {
-    try {
-      const response = await fetch(seedUrl);
-      if (response.ok) {
-        const payload = await response.json() as { module?: string; items?: Partial<FoodItem>[] };
-        if (payload.module === 'food' && Array.isArray(payload.items) && payload.items.length > food.length) {
-          await bulkPut('food_items', payload.items.map((item) => normalizeFood(item)));
-        }
-      }
-    } catch {
-      // Offline first-load: keep the bundled starter set and allow Import to retry later.
-    }
-  }
 
   const locations = await getAll<LocationItem>('locations');
   if (!locations.length) await bulkPut('locations', DEFAULT_LOCATIONS);
   const profiles = await getAll<Profile>('profiles');
   if (!profiles.some((profile) => profile.id === 'profile_default')) {
     await put('profiles', { id: 'profile_default', name: 'Mera ghar', emoji: '🏠', createdAt: new Date().toISOString() });
+  }
+}
+
+/** Seed the large JSON in the background after the first screen is usable. */
+export async function seedLargeFoodDataset(seedUrl: string): Promise<boolean> {
+  if (storageMode !== 'indexeddb') return false;
+  try {
+    const current = await getAll<FoodItem>('food_items');
+    if (current.length >= 4000) return false;
+    const response = await fetch(seedUrl);
+    if (!response.ok) return false;
+    const payload = await response.json() as { module?: string; items?: Partial<FoodItem>[] };
+    if (payload.module !== 'food' || !Array.isArray(payload.items) || payload.items.length <= current.length) return false;
+    await bulkPut('food_items', payload.items.map((item) => normalizeFood(item)));
+    return true;
+  } catch {
+    // The bundled 57-item starter set remains available when offline.
+    return false;
   }
 }
 
