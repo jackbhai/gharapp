@@ -11,7 +11,7 @@ A mobile-first, local-first household command center rebuilt with React, Vite an
 - Dexie for IndexedDB, keeping the existing `gharapp_db` name for migration
 - Zod + React Hook Form for safe forms and required-field validation
 - Lucide React for accessible icons
-- Vite PWA plugin for production service-worker generation
+- Vite PWA plugin for production service-worker generation, install prompt, update prompt and offline-ready status
 - Custom CSS design system for the premium AMOLED-black/glass mobile UI
 
 ## Run
