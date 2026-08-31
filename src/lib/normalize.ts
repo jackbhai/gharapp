@@ -31,7 +31,12 @@ export function normalizeFood(item: Partial<FoodItem> = {}): FoodItem {
     benefits: asArray(item.benefits),
     sideEffects: asArray(item.sideEffects),
     allergens: asArray(item.allergens),
+    allergenTags: asArray(item.allergenTags),
     preparationMethods: asArray(item.preparationMethods),
+    cuisineStyle: text(item.cuisineStyle),
+    regions: asArray(item.regions),
+    mealTypes: asArray(item.mealTypes),
+    goodForHealthGoals: asArray(item.goodForHealthGoals),
     createdAt: item.createdAt || new Date().toISOString(),
   };
 

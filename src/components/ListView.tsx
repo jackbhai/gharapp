@@ -8,14 +8,14 @@ import { useAppStore } from '../store/appStore';
 import { Button, Card, Chip, EmptyState } from './ui';
 
 export function FilterChips({ module, filters, onRemove, onClear }: { module: ModuleName; filters: FilterState; onRemove: (key: string, value?: string) => void; onClear: () => void }) {
-  const labels: Record<string, string> = { categories: 'Category', subCategories: 'Sub-category', tastes: 'Taste', seasons: 'Season', bestTimes: 'Meal time', tags: 'Tag', skinTypes: 'Skin type', locationIds: 'Location', statuses: 'Status', expiryStatuses: 'Expiry', prosText: 'Pro', consText: 'Con', sourceText: 'Source', opened: 'Opened' };
+  const labels: Record<string, string> = { categories: 'Category', subCategories: 'Sub-category', cuisines: 'Cuisine', regions: 'Region', tastes: 'Taste', seasons: 'Season', bestTimes: 'Meal time', mealTypes: 'Meal type', healthGoals: 'Health goal', tags: 'Tag', allergens: 'Allergen', skinTypes: 'Skin type', concerns: 'Concern', locationIds: 'Location', statuses: 'Status', expiryStatuses: 'Expiry', smartFlags: 'Smart', prosText: 'Pro', consText: 'Con', sourceText: 'Source', ingredientsText: 'Ingredient', opened: 'Opened' };
   const chips: { key: string; value?: string; label: string }[] = [];
   Object.entries(filters).forEach(([key, value]) => {
     if (key === 'sort' || key.startsWith('min') || key.startsWith('max') || key.endsWith('From') || key.endsWith('To') || value === undefined || value === '' || value === false) return;
     if (Array.isArray(value)) value.forEach((item) => chips.push({ key, value: String(item), label: `${labels[key] ?? key}: ${item}` }));
     else chips.push({ key, label: `${labels[key] ?? key}: ${String(value)}` });
   });
-  const ranges = [['Calories', 'minCalories', 'maxCalories'], ['Protein', 'minProtein', 'maxProtein'], ['Carbs', 'minCarbs', 'maxCarbs'], ['Fat', 'minFat', 'maxFat'], ['Fiber', 'minFiber', 'maxFiber'], ['Sugar', 'minSugar', 'maxSugar'], ['Quantity', 'minQuantity', 'maxQuantity'], ['Price', 'minPrice', 'maxPrice']];
+  const ranges = [['Calories', 'minCalories', 'maxCalories'], ['Protein', 'minProtein', 'maxProtein'], ['Carbs', 'minCarbs', 'maxCarbs'], ['Fat', 'minFat', 'maxFat'], ['Fiber', 'minFiber', 'maxFiber'], ['Sugar', 'minSugar', 'maxSugar'], ['GI', 'minGI', 'maxGI'], ['Cooking time', 'minCookingTime', 'maxCookingTime'], ['Rating', 'minRating', 'maxRating'], ['Quantity', 'minQuantity', 'maxQuantity'], ['Price', 'minPrice', 'maxPrice']];
   ranges.forEach(([label, min, max]) => { if (filters[min] !== undefined || filters[max] !== undefined) chips.push({ key: min, label: `${label}: ${filters[min] ?? 0}–${filters[max] ?? '∞'}` }); });
   if (!chips.length) return null;
   return <div className="active-filter-row"><div className="active-filter-scroll">{chips.map((chip) => <Chip key={`${chip.key}-${chip.value}`} tone={module === 'cosmetics' ? 'purple' : module === 'inventory' ? 'blue' : 'mint'} removable onRemove={() => onRemove(chip.key, chip.value)}>{chip.label}</Chip>)}</div><button type="button" className="clear-filters" onClick={onClear}>Clear</button></div>;

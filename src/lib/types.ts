@@ -32,6 +32,19 @@ export interface FoodItem {
   dailyUse?: number | boolean;
   recipeSearchQuery?: string;
   tags?: string[];
+  cuisineStyle?: string;
+  regions?: string[];
+  mealTypes?: string[];
+  goodForHealthGoals?: string[];
+  servingSizeG?: number;
+  cookingTimeMin?: number;
+  priceTier?: string;
+  isVeg?: number | boolean;
+  isVegan?: number | boolean;
+  isGlutenFree?: number | boolean;
+  isJain?: number | boolean;
+  isEgg?: number | boolean;
+  allergenTags?: string[];
   createdAt?: string;
   [key: string]: unknown;
 }

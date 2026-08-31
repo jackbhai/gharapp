@@ -98,12 +98,18 @@ export async function seedLargeFoodDataset(seedUrl: string): Promise<boolean> {
   if (storageMode !== 'indexeddb') return false;
   try {
     const current = await getAll<FoodItem>('food_items');
-    if (current.length >= 4000) return false;
+    const marker = await getSetting<{ value?: number }>('foodDatasetVersion');
+    if (marker?.value === 2 && current.length >= 4500) return false;
     const response = await fetch(seedUrl);
     if (!response.ok) return false;
     const payload = await response.json() as { module?: string; items?: Partial<FoodItem>[] };
-    if (payload.module !== 'food' || !Array.isArray(payload.items) || payload.items.length <= current.length) return false;
+    if (payload.module !== 'food' || !Array.isArray(payload.items)) return false;
+    if (payload.items.length <= current.length) {
+      await putSetting('foodDatasetVersion', { value: Number((payload as { datasetVersion?: number }).datasetVersion || 2) });
+      return false;
+    }
     await bulkPut('food_items', payload.items.map((item) => normalizeFood(item)));
+    await putSetting('foodDatasetVersion', { value: Number((payload as { datasetVersion?: number }).datasetVersion || 2) });
     return true;
   } catch {
     // The bundled 57-item starter set remains available when offline.

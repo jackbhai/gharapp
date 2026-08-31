@@ -23,18 +23,27 @@ function matchesFood(item: FoodItem, query: string, filters: FilterState): boole
   if (query && !haystack.includes(query)) return false;
   if (!includesAny(String(item.category || ''), arrayValue(filters, 'categories'))) return false;
   if (!includesAny(String(item.subCategory || ''), arrayValue(filters, 'subCategories'))) return false;
+  if (!includesAny(String(item.cuisineStyle || ''), arrayValue(filters, 'cuisines'))) return false;
+  if (!includesAnyArray(item.regions ?? [], arrayValue(filters, 'regions'))) return false;
   if (!includesAnyArray(item.tasteTags ?? [], arrayValue(filters, 'tastes'))) return false;
   if (!includesAnyArray(item.season ?? [], arrayValue(filters, 'seasons'))) return false;
   const times = arrayValue(filters, 'bestTimes');
+  const mealTypes = arrayValue(filters, 'mealTypes');
   if (times.length && !times.some((time) => String(item.bestTimeToEat || '').toLowerCase().includes(time))) return false;
+  if (mealTypes.length && !includesAnyArray(item.mealTypes ?? [], mealTypes)) return false;
+  if (!includesAnyArray(item.goodForHealthGoals ?? [], arrayValue(filters, 'healthGoals'))) return false;
   for (const [field, key] of [['caloriesPer100g', 'Calories'], ['proteinPer100g', 'Protein'], ['carbsPer100g', 'Carbs'], ['fatPer100g', 'Fat'], ['fiberPer100g', 'Fiber'], ['sugarPer100g', 'Sugar']] as const) {
     if (!between(item[field], numberValue(filters, `min${key}`), numberValue(filters, `max${key}`))) return false;
   }
-  for (const field of ['diabetesFriendly', 'weightLossFriendly', 'kidsFriendly', 'gymFriendly', 'dailyUse']) {
+  if (!between(item.glycemicIndex, numberValue(filters, 'minGI'), numberValue(filters, 'maxGI'))) return false;
+  if (!between(item.cookingTimeMin, numberValue(filters, 'minCookingTime'), numberValue(filters, 'maxCookingTime'))) return false;
+  for (const field of ['diabetesFriendly', 'weightLossFriendly', 'kidsFriendly', 'gymFriendly', 'dailyUse', 'isVeg', 'isVegan', 'isGlutenFree', 'isJain', 'isEgg']) {
     if (filters[field] === true && !item[field]) return false;
   }
   const tags = arrayValue(filters, 'tags');
   if (tags.length && !tags.every((tag) => (item.tags ?? []).map((value) => value.toLowerCase()).includes(tag))) return false;
+  const allergenFilter = arrayValue(filters, 'allergens');
+  if (allergenFilter.length && !allergenFilter.some((allergen) => [...(item.allergens ?? []), ...(item.allergenTags ?? [])].map((value) => value.toLowerCase()).includes(allergen))) return false;
   if (filters.prosText && !(item.pros ?? []).join(' ').toLowerCase().includes(String(filters.prosText).toLowerCase())) return false;
   if (filters.consText && !(item.cons ?? []).join(' ').toLowerCase().includes(String(filters.consText).toLowerCase())) return false;
   return true;
@@ -62,6 +71,10 @@ function matchesInventory(item: InventoryItem, query: string, filters: FilterSta
   if (expiry.length && !expiry.includes(getExpiryStatus(item.expiryDate, item.alertBeforeDays))) return false;
   if (!between(item.quantity, numberValue(filters, 'minQuantity'), numberValue(filters, 'maxQuantity'))) return false;
   if (!between(item.price, numberValue(filters, 'minPrice'), numberValue(filters, 'maxPrice'))) return false;
+  const smartFlags = arrayValue(filters, 'smartFlags');
+  if (smartFlags.includes('low stock') && !(item.reorderLevel && item.quantity <= item.reorderLevel)) return false;
+  if (smartFlags.includes('has barcode') && !item.barcode) return false;
+  if (smartFlags.includes('has photo') && !item.photoData) return false;
   return dateMatches(item.purchaseDate, filters, 'purchase') && dateMatches(item.mfgDate, filters, 'mfg') && dateMatches(item.expiryDate, filters, 'expiry');
 }
 
@@ -76,6 +89,9 @@ function matchesCosmetic(item: CosmeticItem, query: string, filters: FilterState
   if (expiry.length && !expiry.includes(getExpiryStatus(item.expiryDate, item.alertBeforeDays))) return false;
   const locations = arrayValue(filters, 'locationIds');
   if (locations.length && !locations.includes(String(item.locationId || '').toLowerCase())) return false;
+  if (!includesAnyArray(item.concerns ?? [], arrayValue(filters, 'concerns'))) return false;
+  if (filters.ingredientsText && !String(item.ingredients || '').toLowerCase().includes(String(filters.ingredientsText).toLowerCase())) return false;
+  if (!between(item.rating, numberValue(filters, 'minRating'), numberValue(filters, 'maxRating'))) return false;
   return dateMatches(item.purchaseDate, filters, 'purchase') && dateMatches(item.mfgDate, filters, 'mfg') && dateMatches(item.expiryDate, filters, 'expiry');
 }
 
