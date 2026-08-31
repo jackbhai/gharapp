@@ -1,5 +1,7 @@
 # GharApp React
 
+Live demo: https://jackbhai.github.io/gharapp/
+
 A mobile-first, local-first household command center rebuilt with React, Vite and TypeScript.
 
 ## Stack
@@ -40,6 +42,29 @@ npm run preview
 
 ## Data & privacy
 
-The app stores records locally in IndexedDB. It falls back to localStorage if IndexedDB is unavailable in a file/WebView context. AI and barcode lookup only call the network after the user chooses to configure/use them.
+The app stores records locally in IndexedDB. It falls back to localStorage if IndexedDB is unavailable in a file/WebView context. The supplied `public/data/indian_food_dataset.json` contains **4,315 pre-seeded food records**; it is loaded once and then stored in IndexedDB so the large dataset does not become part of the JavaScript bundle. AI and barcode lookup only call the network after the user chooses to configure/use them.
 
 The database migration normalizes legacy nutrition fields to two decimals, including values such as `15.180000000000001 → 15.18`.
+
+## Attach a personal cloud database
+
+Open **More → Settings → Cloud sync**. The app supports:
+
+- **Supabase REST:** enter your project URL and anon/publishable key.
+- **Firebase Realtime Database:** enter the database URL and an auth/ID token.
+
+The connection is stored only in the current browser's local storage and is never committed to GitHub. Use only public/anon keys or short-lived user tokens; never use a Supabase `service_role` key in a frontend app.
+
+For Supabase, create the one-time table shown in the expandable setup help:
+
+```sql
+create table public.gharapp_sync (
+  id text primary key,
+  profile_id text not null,
+  payload jsonb not null,
+  updated_at timestamptz default now()
+);
+alter table public.gharapp_sync enable row level security;
+```
+
+Add RLS policies appropriate for your signed-in user. Then press **Save & test** and **Sync now** on each device. Sync pulls remote records, merges by ID using the newest timestamp, and pushes the current profile snapshot back to the provider.
