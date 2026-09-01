@@ -36,7 +36,10 @@ npm run preview
 - Meal planner with a week strip and nutrition totals
 - Smart shopping list generated from reorder levels
 - Daily nutrition tracker and seven-day history
-- Optional OpenRouter assistant with Hinglish prompts, voice input, image attachment and retry UX
+- Optional OpenRouter assistant with Hinglish Roman-script prompts, local smart answers, Markdown-style `**bold**`/bullets, voice input, image attachment, cache and a daily remote-call budget
+- Demo pantry records on a fresh install for testing expiry, barcode and AI questions
+- Receipt photo → AI item extraction with manual CSV-style fallback
+- Barcode camera/manual lookup: matching inventory state opens on re-scan; new products are prefilled and barcode is saved
 - JSON import/export with update/merge/skip duplicate policies and CSV exports
 - Theme, high-contrast, font-size, reminders and family profiles
 
