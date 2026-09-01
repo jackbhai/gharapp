@@ -74,7 +74,7 @@ export async function initDatabase(seedUrl?: string): Promise<void> {
 
   const foodDatasetMarker = await getSetting<{ value?: number }>('foodDatasetVersion');
   // One-time migration: discard the previous catalog so the newly attached seed is authoritative.
-  if (storageMode === 'indexeddb' && foodDatasetMarker?.value !== 5) await clearStore('food_items');
+  if (foodDatasetMarker?.value !== 5) await clearStore('food_items');
   const food = await getAll<FoodItem>('food_items');
   if (!food.length) {
     await bulkPut('food_items', [...FOOD_DATA, ...COOKED_MEALS].map((item) => normalizeFood(item)));
