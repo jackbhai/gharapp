@@ -72,6 +72,9 @@ export async function initDatabase(seedUrl?: string): Promise<void> {
     storageMode = 'localstorage';
   }
 
+  const foodDatasetMarker = await getSetting<{ value?: number }>('foodDatasetVersion');
+  // One-time migration: discard the previous catalog so the newly attached seed is authoritative.
+  if (storageMode === 'indexeddb' && foodDatasetMarker?.value !== 5) await clearStore('food_items');
   const food = await getAll<FoodItem>('food_items');
   if (!food.length) {
     await bulkPut('food_items', [...FOOD_DATA, ...COOKED_MEALS].map((item) => normalizeFood(item)));
@@ -100,20 +103,20 @@ export async function seedLargeFoodDataset(seedUrl: string): Promise<boolean> {
   try {
     const current = await getAll<FoodItem>('food_items');
     const marker = await getSetting<{ value?: number }>('foodDatasetVersion');
-    if (marker?.value === 3 && current.length >= 4600) return false;
+    if (marker?.value === 5 && current.length >= 2600) return false;
     const response = await fetch(seedUrl);
     if (!response.ok) return false;
     const payload = await response.json() as { module?: string; items?: Partial<FoodItem>[] };
     if (payload.module !== 'food' || !Array.isArray(payload.items)) return false;
     if (payload.items.length <= current.length) {
-      await putSetting('foodDatasetVersion', { value: Number((payload as { datasetVersion?: number }).datasetVersion || 2) });
+      await putSetting('foodDatasetVersion', { value: Number((payload as { datasetVersion?: number }).datasetVersion || 5) });
       return false;
     }
     await bulkPut('food_items', payload.items.map((item) => normalizeFood(item)));
-    await putSetting('foodDatasetVersion', { value: Number((payload as { datasetVersion?: number }).datasetVersion || 2) });
+    await putSetting('foodDatasetVersion', { value: Number((payload as { datasetVersion?: number }).datasetVersion || 5) });
     return true;
   } catch {
-    // The bundled 57-item starter set remains available when offline.
+    // The bundled offline sample remains available when the full attached seed is unavailable.
     return false;
   }
 }

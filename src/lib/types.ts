@@ -5,6 +5,8 @@ export interface FoodItem {
   id: string;
   name: string;
   foodType?: FoodMode;
+  image?: string;
+  imageEmoji?: string;
   category: string;
   subCategory?: string;
   tasteTags?: string[];
