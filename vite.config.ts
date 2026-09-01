@@ -39,6 +39,15 @@ export default defineConfig({
         navigateFallback: `${process.env.VITE_BASE_PATH || '/'}index.html`,
         maximumFileSizeToCacheInBytes: 15 * 1024 * 1024,
         globPatterns: ['**/*.{js,css,html,svg,png,woff2,json}'],
+        runtimeCaching: [{
+          urlPattern: /^https:\/\/cdn\.jsdelivr\.net\/gh\/jackbhai\/gharapp-image-factory\/.*/i,
+          handler: 'CacheFirst',
+          options: {
+            cacheName: 'gharapp-food-images',
+            expiration: { maxEntries: 3000, maxAgeSeconds: 60 * 60 * 24 * 180 },
+            cacheableResponse: { statuses: [0, 200] },
+          },
+        }],
       },
     }),
   ],
