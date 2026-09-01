@@ -1,6 +1,7 @@
 import Dexie, { type Table } from 'dexie';
 import { FOOD_DATA } from '../data/foodData';
 import { COOKED_MEALS } from '../data/cookedMeals';
+import { SAMPLE_INVENTORY } from '../data/sampleInventory';
 import type { AppSettings, CosmeticItem, DailyLog, FoodItem, InventoryItem, LocationItem, MealPlanItem, Profile, SavedFilter, ShoppingItem } from './types';
 import { normalizeCosmetic, normalizeFood, normalizeInventory } from './normalize';
 
@@ -84,7 +85,8 @@ export async function initDatabase(seedUrl?: string): Promise<void> {
   }
 
   const inventory = await getAll<InventoryItem>('inventory_items');
-  if (inventory.length) await bulkPut('inventory_items', inventory.map((item) => normalizeInventory(item, 'profile_default')));
+  if (!inventory.length) await bulkPut('inventory_items', SAMPLE_INVENTORY.map((item) => normalizeInventory(item, 'profile_default')));
+  else await bulkPut('inventory_items', inventory.map((item) => normalizeInventory(item, 'profile_default')));
   const cosmetics = await getAll<CosmeticItem>('cosmetics_items');
   if (cosmetics.length) await bulkPut('cosmetics_items', cosmetics.map((item) => normalizeCosmetic(item, 'profile_default')));
 
